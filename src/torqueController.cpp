@@ -1,0 +1,65 @@
+ /**
+   * Author 		: Yudha Pane 
+   * Created on		: Nov 7th, 2015
+   * Last updated	: Nov 7th, 2015
+   * Description 	: This program implements a simple torque controller algorithm for SEA.
+   * 				  The SEA is tested by having the link-side fixed.
+   */
+
+#include "ros/ros.h"
+#include "std_msgs/String.h"
+#include "std_msgs/Int16.h"
+#include "std_msgs/Float32.h"
+#include <string>
+
+double springAngle = 0.0;
+double measuredTorque = 0.0;
+double errorTorque = 0.0;
+double desiredTorque = 0.25;  		// [Nm]
+const double Kp = 100.0; 				// P-gain constant
+const double ks = 6.2223/57.2958; 	// spring constant [Nm/deg]
+std_msgs::Float32 motorSpeed;
+
+void torqueController(std_msgs::Float32 encoderData)
+{
+	   // ROS_INFO("encoderData = %f", encoderData.data);
+	    springAngle = encoderData.data;
+}
+
+int main(int argc, char **argv)
+{
+
+  ros::init(argc, argv, "torqueController");
+  ros::NodeHandle n;
+  ros::Rate loop_rate(100);
+  ros::Subscriber sub 		= n.subscribe("encoder_data", 1, torqueController);
+  ros::Publisher mot_sub	= n.advertise<std_msgs::Float32>("motor_speed", 1000);
+      
+  while (ros::ok())
+  {
+
+ 	// Torque controller law
+ 	measuredTorque  = ks*springAngle;
+ 	errorTorque     = desiredTorque - measuredTorque;
+ 	ROS_INFO("torque error = %f", errorTorque);
+    motorSpeed.data = -Kp*errorTorque;
+   // ROS_INFO("motorSpeed = %f", motorSpeed.data);
+
+    /**
+     * The publish() function is how you send messages. The parameter
+     * is the message object. The type of this object must agree with the type
+     * given as a template parameter to the advertise<>() call, as was done
+     * in the constructor above.
+     */
+    mot_sub.publish(motorSpeed);
+
+    
+  //	ros::spin();
+  ros::spinOnce();
+
+    loop_rate.sleep();
+    
+  }
+  return 0;
+}
+// %EndTag(FULLTEXT)%

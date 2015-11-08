@@ -1,0 +1,187 @@
+ /**
+   * Author 		: Yudha Pane 
+   * Created on		: Oct 21st
+   * Last updated	: Nov 7th
+   * Description 	: A node which sends motor PWM to an arduino
+   */
+
+#include "ros/ros.h"
+#include "std_msgs/String.h"
+#include "std_msgs/Int16.h"
+#include "std_msgs/Float32.h"
+#include "ros/node_handle.h"
+
+
+#include <stdio.h>      // standard input / output functions
+#include <stdlib.h>
+#include <unistd.h>     // UNIX standard function definitions
+#include <fcntl.h>      // File control definitions
+#include <errno.h>      // Error number definitions
+#include <termios.h>    // POSIX terminal control definitions
+#include <iostream>
+
+double motorRpm = 0.0;
+
+void callbackFunction(std_msgs::Float32 motorSpeed)
+{
+	   motorRpm = motorSpeed.data;
+	   // ROS_INFO("encoderData = %f", encoderData.data);
+}
+
+int main(int argc, char **argv)
+{
+	setbuf(stdout, NULL);
+	// set-up the serial communication
+	struct termios tio;
+	struct termios stdio;
+	struct termios config;
+	int tty_fd;
+	fd_set rdset;
+	int iReadStatus = 0;
+	unsigned char data[4];
+	unsigned char c = 'A';
+	unsigned char pwm = 0;
+	int iHomePos    = 0;
+	float fAngle = 0.0;
+	
+	//char encoderData[4];
+	std_msgs::Int16 messageData;
+	
+    int b0, b1, b2, b3;
+
+    tty_fd=open("/dev/ttyACM0", O_RDWR | O_NONBLOCK);
+  	if (tty_fd>0)
+	{
+		printf("USB Serial Port Opened! Status:%d \n", tty_fd);
+	}
+	else
+	{	
+		printf("USB Serial Port Open Failed! Status:%d \n", tty_fd);
+		sleep(1);
+		return 0;
+	}    
+	
+	
+	if(tcgetattr(tty_fd, &config) < 0) 
+	{ 
+		printf("serial config can't be obtained!");
+		sleep(1);
+		return 0;
+	}
+	
+	 //
+	 // Input flags - Turn off input processing
+	 //
+	 // convert break to null byte, no CR to NL translation,
+	 // no NL to CR translation, don't mark parity errors or breaks
+	 // no input parity check, don't strip high bit off,
+	 // no XON/XOFF software flow control
+	 //
+	 config.c_iflag &= ~(IGNBRK | BRKINT | ICRNL |
+		                 INLCR | PARMRK | INPCK | ISTRIP | IXON);
+
+	 //
+	 // Output flags - Turn off output processing
+	 //
+	 // no CR to NL translation, no NL to CR-NL translation,
+	 // no NL to CR translation, no column 0 CR suppression,
+	 // no Ctrl-D suppression, no fill characters, no case mapping,
+	 // no local output processing
+	 //
+	 // config.c_oflag &= ~(OCRNL | ONLCR | ONLRET |
+	 //                     ONOCR | ONOEOT| OFILL | OLCUC | OPOST);
+	 config.c_oflag = 0;
+
+	 //
+	 // No line processing
+	 //
+	 // echo off, echo newline off, canonical mode off, 
+	 // extended input processing off, signal chars off
+	 //
+	 config.c_lflag &= ~(ECHO | ECHONL | ICANON | IEXTEN | ISIG);
+
+	 //
+	 // Turn off character processing
+	 //
+	 // clear current char size mask, no parity checking,
+	 // no output processing, force 8 bit input
+	 //
+	 config.c_cflag &= ~(CSIZE | PARENB);
+	 config.c_cflag |= CS8;
+
+	 //
+	 // 4 input bytes is enough to return from read()
+	 // Inter-character timer off
+	 //
+	 config.c_cc[VMIN]  = 4;
+	 config.c_cc[VTIME] = 0;
+
+	 //
+	 // Communication speed (simple version, using the predefined
+	 // constants)
+	 //
+	 if(cfsetispeed(&config, B9600) < 0 || cfsetospeed(&config, B9600) < 0) 
+	  {
+	 	printf("serial speed can't be set \n");
+		sleep(1);
+	 	return 0;
+	 }
+
+	 //
+	 // Finally, apply the configuration
+	 //
+	 if(tcsetattr(tty_fd, TCSANOW, &config) < 0) 
+	 {
+	 	printf("serial config can't be set \n");
+		sleep(1);
+	 	return 0;
+	 }
+ 
+
+	// create ros node
+ 	ros::init(argc, argv, "arduinoPublisher");
+  	ros::NodeHandle n;
+
+  	ros::Publisher arduino_pub 	= n.advertise<std_msgs::Int16>("arduino_data", 1);
+  	ros::Subscriber arduino_sub	= n.subscribe("motor_speed", 1, callbackFunction);
+  	ros::Rate loop_rate(100);
+  	while (ros::ok())
+  	{
+        memset(data, 0, sizeof(data));
+        write(tty_fd,&pwm,1);
+        iReadStatus = read(tty_fd,data,1);
+		
+		if (iReadStatus>0)
+		{		 
+         
+         // messageData.data = data[0];  
+         	pwm = (int) motorRpm;
+         	messageData.data = pwm; 
+         	if (pwm <= 128)             
+ 				ROS_INFO("PWM: %d", pwm);
+ 			else
+ 				ROS_INFO("PWM: %d", pwm-256);
+ 	
+    	}
+    	else
+    	{
+    		//printf("read is failed! \n");
+    	}
+
+		fflush(stdout); 
+   		arduino_pub.publish(messageData);
+    	if(tcflush(tty_fd, TCIOFLUSH)<0)
+    	{
+    		printf("Failed to flush! \n");
+    		sleep(1);
+    		return 0;
+    	}
+
+    	ros::spinOnce();
+    	loop_rate.sleep();
+       	
+  	}
+    close(tty_fd);
+  return 0;
+}
+

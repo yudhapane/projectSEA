@@ -1,0 +1,20 @@
+<launch>
+
+  <group ns="torquecontroller">
+    <node pkg="torqueController" name="torqueController" type="torque_node"/>
+  </group>
+
+  <group ns="arduinopublisher">
+    <node pkg="arduinoPublisher" name="arduinoPublisher" type="arduino_node"/>
+  </group>
+
+  <group ns="encoderpublisher">
+    <node pkg="arduinoPublisher" name="encoderPublisher" type="encoder_node"/>
+  </group>
+  
+  <node pkg="turtlesim" name="mimic" type="mimic">
+    <remap from="input" to="turtlesim1/turtle1"/>
+    <remap from="output" to="turtlesim2/turtle1"/>
+  </node>
+
+</launch>

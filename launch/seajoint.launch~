@@ -1,0 +1,16 @@
+<launch>
+
+  <group ns="torquecontroller">
+    <node pkg="beginner_tutorials" name="torqueController" type="torqueController"/>
+  </group>
+
+  <group ns="arduinopublisher">
+    <node pkg="beginner_tutorials" name="arduinoPublisher" type="arduinoPublisher"/>
+  </group>
+
+  <group ns="encoderpublisher">
+    <node pkg="beginner_tutorials" name="encoderPublisher" type="encoderPublisher"/>
+  </group>
+
+
+</launch>

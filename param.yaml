@@ -1,0 +1,12 @@
+background_b: 150
+background_g: 3
+background_r: 150
+rosdistro: 'indigo
+
+  '
+roslaunch:
+  uris: {host_pane_hp_zbook_15__37395: 'http://pane-HP-ZBook-15:37395/'}
+rosversion: '1.11.8
+
+  '
+run_id: 5b54853a-2769-11e5-a76d-a0a8cd9c1fee

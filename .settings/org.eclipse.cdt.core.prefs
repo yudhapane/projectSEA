@@ -1,0 +1,15 @@
+eclipse.preferences.version=1
+environment/project/0.487779947/PATH/delimiter=\:
+environment/project/0.487779947/PATH/operation=append
+environment/project/0.487779947/PATH/value=${PATH}
+environment/project/0.487779947/PYTHONPATH/delimiter=\:
+environment/project/0.487779947/PYTHONPATH/operation=append
+environment/project/0.487779947/PYTHONPATH/value=${PYTHONPATH}
+environment/project/0.487779947/ROS_PACKAGE_PATH/delimiter=\:
+environment/project/0.487779947/ROS_PACKAGE_PATH/operation=append
+environment/project/0.487779947/ROS_PACKAGE_PATH/value=${ROS_PACKAGE_PATH}
+environment/project/0.487779947/ROS_ROOT/delimiter=\:
+environment/project/0.487779947/ROS_ROOT/operation=append
+environment/project/0.487779947/ROS_ROOT/value=${ROS_ROOT}
+environment/project/0.487779947/append=true
+environment/project/0.487779947/appendContributed=true
