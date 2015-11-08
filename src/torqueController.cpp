@@ -16,9 +16,10 @@ double springAngle = 0.0;
 double measuredTorque = 0.0;
 double errorTorque = 0.0;
 double desiredTorque = 0.25;  		// [Nm]
-const double Kp = 100.0; 				// P-gain constant
+const double Kp = 10.0; 				// P-gain constant
 const double ks = 6.2223/57.2958; 	// spring constant [Nm/deg]
 std_msgs::Float32 motorSpeed;
+std_msgs::Float32 torqueError;
 
 void torqueController(std_msgs::Float32 encoderData)
 {
@@ -34,7 +35,7 @@ int main(int argc, char **argv)
   ros::Rate loop_rate(100);
   ros::Subscriber sub 		= n.subscribe("encoder_data", 1, torqueController);
   ros::Publisher mot_sub	= n.advertise<std_msgs::Float32>("motor_speed", 1000);
-      
+  ros::Publisher mot_sub2	= n.advertise<std_msgs::Float32>("torque_error", 1000);    
   while (ros::ok())
   {
 
@@ -43,6 +44,7 @@ int main(int argc, char **argv)
  	errorTorque     = desiredTorque - measuredTorque;
  	ROS_INFO("torque error = %f", errorTorque);
     motorSpeed.data = -Kp*errorTorque;
+    torqueError.data = errorTorque;
    // ROS_INFO("motorSpeed = %f", motorSpeed.data);
 
     /**
@@ -52,7 +54,7 @@ int main(int argc, char **argv)
      * in the constructor above.
      */
     mot_sub.publish(motorSpeed);
-
+    mot_sub2.publish(torqueError );
     
   //	ros::spin();
   ros::spinOnce();
